@@ -1,106 +1,69 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | -------- |
+# RAPIDPULZE BLUEBOTTLE
 
-# ESP-IDF Gatt Server Example
+## Project Overview
 
-This example shows how create a GATT service by adding attributes one by one. However, this method is defined by Bluedroid and is difficult for users to use.
+RAPIDPULZE BLUEBOTTLE is a BLE MIDI project based on ESP32. This project implements MIDI message transmission and reception through Bluetooth Low Energy (BLE) technology. The code uses FreeRTOS as the real-time operating system and leverages the ESP-IDF framework for development.
 
-Hence, we also allow users to create a GATT service with an attribute table, which releases the user from adding attributes one by one. And it is recommended for users to use. For more information about this method, please refer to [gatt_server_service_table_demo](../gatt_server_service_table).
+## Features
 
-This demo creates GATT a service and then starts advertising, waiting to be connected to a GATT client.
+- **BLE MIDI Transmission**: Transmit MIDI messages via Bluetooth Low Energy technology.
+- **Multi-Port Support**: Support for multiple MIDI ports, currently configured for a single port (`BLEMIDI_NUM_PORTS = 1`).
+- **Automatic Timestamp Handling**: Automatically handle MIDI message timestamps to ensure real-time messaging.
+- **Output Buffer Management**: Manage the output buffer for MIDI messages to prevent message loss.
+- **Callback Mechanism**: Provide a callback function for receiving MIDI messages, facilitating user handling of received MIDI messages.
 
-To test this demo, we can run the [gatt_client_demo](../gatt_client), which can scan for and connect to this demo automatically. They will start exchanging data once the GATT client has enabled the notification function of the GATT server.
+## Code Structure
 
-Please, check this [tutorial](tutorial/Gatt_Server_Example_Walkthrough.md) for more information about this example.
+### Main Files
 
-## How to Use Example
+- `main.c`: Main program file, containing BLE MIDI initialization and main loop.
+- `blemidi.c`: BLE MIDI driver file, containing MIDI message reception and transmission logic.
 
-Before project configuration and build, be sure to set the correct chip target using:
+### Main Functions
 
-```bash
-idf.py set-target <chip_name>
-```
+- `app_main()`: Main function, initializes the BLE MIDI device and starts the main loop.
+- `blemidi_init()`: Initializes the BLE MIDI service.
+- `blemidi_send_message()`: Sends MIDI messages.
+- `blemidi_receive_packet()`: Receives MIDI data packets and processes them.
+- `callback_midi_message_received()`: Callback function for receiving MIDI messages.
 
-### Hardware Required
+### Configuration Parameters
 
-* A development board with ESP32/ESP32-C3/ESP32-C2/ESP32-H2/ESP-S3 SoC (e.g., ESP32-DevKitC, ESP-WROVER-KIT, etc.)
-* A USB cable for Power supply and programming
+- `BLEMIDI_DEVICE_NAME`: BLE device name, currently set to `"RP Ble midi"`.
+- `BLEMIDI_NUM_PORTS`: Number of supported MIDI ports, currently set to `1`.
+- `BLEMIDI_OUTBUFFER_FLUSH_MS`: Output buffer flush interval, currently set to `15` milliseconds.
+- `BLEMIDI_ENABLE_CONSOLE`: Whether to enable console output, currently set to `1` (enabled).
 
-See [Development Boards](https://www.espressif.com/en/products/devkits) for more information about it.
+## Usage Instructions
 
-### Build and Flash
+### Compilation and Flashing
 
-Run `idf.py -p PORT flash monitor` to build, flash and monitor the project.
+1. Ensure you have the ESP-IDF development environment installed.
+2. Clone the project code to your local machine.
+3. Run `idf.py build` in the project root directory to compile.
+4. Use `idf.py -p <PORT> flash` to flash the firmware to the ESP32 device.
 
-(To exit the serial monitor, type ``Ctrl-]``.)
+### Running
 
-See the [Getting Started Guide](https://idf.espressif.com/) for full steps to configure and use ESP-IDF to build projects.
+1. After flashing, the ESP32 device will automatically start and begin broadcasting the BLE MIDI service.
+2. Connect to the `RP Ble midi` device using a BLE MIDI-supported device (such as a smartphone or computer).
+3. The device will automatically send MIDI messages and output received MIDI messages to the console.
 
-### Settings for UUID128
+## Dependencies
 
-This example works with UUID16 as default. To change to UUID128, follow this steps:
+- `esp-idf`: Official development framework for ESP32.
+- `FreeRTOS`: Real-time operating system for task management and scheduling.
+- `esp_bt`: Bluetooth controller library for ESP32.
+- `esp_gap_ble_api` and `esp_gatts_api`: APIs related to BLE connection and GATT services.
 
-1. Change the UIID16 to UUID128. You can change the UUID according to your needs.
+## License
 
-```c
-// Create a new UUID128 (using random values for this example)
-uint8_t gatts_service_uuid128_test_X[ESP_UUID_LEN_128] = {0x06, 0x18, 0x7a, 0xec, 0xbe, 0x11, 0x11, 0xea, 0x00, 0x16, 0x02, 0x42, 0x01, 0x13, 0x00, 0x04};
-```
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
-By adding this new UUID128, you can remove the `#define` macros with the old UUID16.
+## Contribution
 
-2. Add the new UUID128 to the profile.
+Feel free to submit issues and improvement suggestions. If you are interested in contributing code, please submit a Pull Request.
 
-```c
-// Change the size of the UUID from 16 to 128
-gl_profile_tab[PROFILE_X_APP_ID].service_id.id.uuid.len = ESP_UUID_LEN_128;
-// Copy the new UUID128 to the profile
-memcpy(gl_profile_tab[PROFILE_X_APP_ID].service_id.id.uuid.uuid.uuid128, gatts_service_uuid128_test_X, ESP_UUID_LEN_128);
-```
+## Contact Information
 
-3. Remove the following line(s)
-```c
-gl_profile_tab[PROFILE_X_APP_ID].service_id.id.uuid.uuid.uuid16 = GATTS_SERVICE_UUID_TEST_X;
-```
-
-## Example Output
-
-```
-I (0) cpu_start: Starting scheduler on APP CPU.
-I (512) BTDM_INIT: BT controller compile version [1342a48]
-I (522) system_api: Base MAC address is not set
-I (522) system_api: read default base MAC address from EFUSE
-I (522) phy_init: phy_version 4670,719f9f6,Feb 18 2021,17:07:07
-I (922) GATTS_DEMO: REGISTER_APP_EVT, status 0, app_id 0
-
-I (932) GATTS_DEMO: CREATE_SERVICE_EVT, status 0,  service_handle 40
-
-I (942) GATTS_DEMO: REGISTER_APP_EVT, status 0, app_id 1
-
-I (952) GATTS_DEMO: SERVICE_START_EVT, status 0, service_handle 40
-
-I (952) GATTS_DEMO: ADD_CHAR_EVT, status 0,  attr_handle 42, service_handle 40
-
-I (962) GATTS_DEMO: the gatts demo char length = 3
-
-I (962) GATTS_DEMO: prf_char[0] =11
-
-I (972) GATTS_DEMO: prf_char[1] =22
-
-I (972) GATTS_DEMO: prf_char[2] =33
-
-I (982) GATTS_DEMO: CREATE_SERVICE_EVT, status 0,  service_handle 44
-
-I (982) GATTS_DEMO: ADD_DESCR_EVT, status 0, attr_handle 43, service_handle 40
-
-I (992) GATTS_DEMO: SERVICE_START_EVT, status 0, service_handle 44
-
-I (1002) GATTS_DEMO: ADD_CHAR_EVT, status 0,  attr_handle 46, service_handle 44
-
-I (1012) GATTS_DEMO: ADD_DESCR_EVT, status 0, attr_handle 47, service_handle 44
-
-```
-
-## Troubleshooting
-
-For any technical queries, please open an [issue](https://github.com/espressif/esp-idf/issues) on GitHub. We will get back to you soon.
+For any questions or suggestions, please contact the project maintainer
